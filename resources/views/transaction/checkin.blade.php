@@ -89,7 +89,10 @@
                     <td>{{ $bill->purchases->party->first_name ?? 'N/A' }}</td> <!-- Adjust this to display supplier name if needed -->
                     <td>{{ $bill->product->name }}</td> <!-- Display Product Name -->
                     <td>{{ $bill->quantity }}</td> 
-                    <td>{{ $bill->quantity }}</td>
+                    <td>
+    {{ $purchases->where('purchase_code', $bill->transaction_id)->sum('total_quantity') }}
+</td>
+
                     <td>{{ number_format($bill->total, 2) }}</td>
                     <td>{{ number_format($bill->balance, 2) }}</td>
                     <td>{{ $bill->creator->username }}</td>
@@ -172,9 +175,11 @@ $(document).ready(function () {
             success: function (data) {
                 let options = "";
                 data.forEach(location => {
-                    options += `<option value="${location.id}">
+                    options += `<option value="${location.id}" 
+                                    data-current-capacity="${location.current_capacity}"
+                                    data-storage-capacity="${location.storage_capacity}">
                                     ${location.name} - Line: ${location.location_line_id} 
-                                    (Capacity: ${location.current_capacity}/${location.storage_capacity})
+                                    (Capacity: <span class="capacity-display">${location.current_capacity}</span>/${location.storage_capacity})
                                 </option>`;
                 });
 
@@ -186,7 +191,44 @@ $(document).ready(function () {
             }
         });
     });
+
+    // Function to update the current capacity after scanning
+    function updateCurrentCapacity(locationId) {
+    fetch("/recalculate-location-capacity", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+        },
+        body: JSON.stringify({ location_id: locationId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Find the selected location in the dropdown and update capacity
+            $("#locationSelect option:selected").attr("data-current-capacity", data.new_capacity);
+            $("#locationSelect option:selected").html(
+                `${data.location_name} - Line: ${data.location_line_id} 
+                 (Capacity: <span class="capacity-display">${data.new_capacity}</span>/${data.storage_capacity})`
+            );
+        }
+    })
+    .catch(error => {
+        console.error("Error updating capacity:", error);
+    });
+}
+
+// Trigger update when barcode is scanned
+$("#barcodeScanner").on("change", function () {
+    var locationId = $("#locationSelect").val();
+    if (locationId) {
+        updateCurrentCapacity(locationId);
+    }
 });
+
+  
+});
+
 </script>
 
 <script>

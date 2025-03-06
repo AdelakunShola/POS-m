@@ -1256,6 +1256,9 @@ Route::group(['prefix' => 'location-line'], function () {
 
     Route::post('/validate-barcode', [BarcodeController::class, 'validateBarcode'])->name('barcode.validate');
     Route::post('/store-scanned-barcode', [BarcodeController::class, 'storeScannedBarcode']);
+    Route::post('/recalculate-location-capacity', [LocationController::class, 'recalculateCapacity']);
+
+
 
 
 

@@ -72,7 +72,15 @@ class BarcodeController extends Controller
         ->latest()
         ->get();
 
-    return view('transaction.checkin', compact('bills'));
+        $purchases = DB::table('inventory_checkins')
+    ->select('purchase_code', DB::raw('SUM(quantity) as total_quantity'))
+    ->groupBy('purchase_code')
+    ->get();
+
+
+
+
+    return view('transaction.checkin', compact('bills', 'purchases'));
 }
 
 
@@ -120,86 +128,170 @@ public function getLocations($item_id)
 
 
 public function validateBarcode(Request $request)
-{
-    try {
-        $barcode = $request->barcode;
-        $itemId = $request->item_id;
-
-        // Fetch product name from the database
-        $product = DB::table('items')->where('id', $itemId)->first();
-
-        if (!$product) {
-            return response()->json([
-                'valid' => false,
-                'message' => 'Invalid product!'
-            ]);
-        }
-
-        Log::info("Validating barcode: $barcode for item: $itemId (Product: $product->name)");
-
-        // Check if the barcode exists and belongs to the correct product
-        $barcodeRecord = DB::table('product_barcodes')
-            ->where('barcode', $barcode)
-            ->where('item_id', $itemId)
-            ->first();
-
-        if (!$barcodeRecord) {
-            return response()->json([
-                'valid' => false,
-                'message' => 'Invalid barcode or does not belong to this product!'
-            ]);
-        }
-
-        return response()->json(['valid' => true]);
-
-    } catch (\Exception $e) {
-        Log::error("Barcode validation failed: " . $e->getMessage());
-        return response()->json([
-            'valid' => false,
-            'message' => 'Server error: ' . $e->getMessage()
-        ], 500);
-    }
-}
-
-
-
-
-public function storeScannedBarcode(Request $request)
     {
-        // Log Incoming Request Data
+        try {
+            $barcode = $request->barcode;
+            $itemId = $request->item_id;
+
+            // Fetch product name
+            $product = DB::table('items')->where('id', $itemId)->first();
+            if (!$product) {
+                return response()->json([
+                    'valid' => false,
+                    'message' => 'Invalid product!'
+                ]);
+            }
+
+            Log::info("Validating barcode: $barcode for item: $itemId (Product: $product->name)");
+
+            // Check if barcode exists for the correct product
+            $barcodeRecord = DB::table('product_barcodes')
+                ->where('barcode', $barcode)
+                ->where('item_id', $itemId)
+                ->first();
+
+            if (!$barcodeRecord) {
+                return response()->json([
+                    'valid' => false,
+                    'message' => 'Invalid barcode or does not belong to this product!'
+                ]);
+            }
+
+            // Check if barcode was already checked in
+            $existingCheckin = DB::table('inventory_checkins')
+                ->where('barcode', $barcode)
+                ->first();
+
+            if ($existingCheckin) {
+                $location = DB::table('locations')->where('id', $existingCheckin->location_id)->first();
+
+                return response()->json([
+                    'valid' => false,
+                    'message' => "Barcode already checked in! Location: {$location->name}, Line: {$location->location_line_id}"
+                ]);
+            }
+
+            return response()->json(['valid' => true]);
+
+        } catch (\Exception $e) {
+            Log::error("Barcode validation failed: " . $e->getMessage());
+            return response()->json([
+                'valid' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeScannedBarcode(Request $request)
+    {
+        // Log incoming request data
         Log::info('Incoming Request Data:', $request->all());
 
         try {
             // Validate input fields
             $validatedData = $request->validate([
-                'barcode' => 'required|unique:inventory_checkins,barcode',
+                'barcode' => 'required|string',
                 'item_id' => 'required|exists:items,id',
                 'location_id' => 'required|exists:locations,id',
                 'location_name' => 'required|string',
                 'location_line_id' => 'required|string',
                 'storage_capacity' => 'required|integer',
-                'current_capacity' => 'required|integer',
                 'purchase_code' => 'required|string',
-                'user_id' => 'required|exists:users,id'
+                'user_id' => 'required|exists:users,id',
             ]);
 
-            // Save scanned barcode data
-            $checkin = InventoryCheckin::create($validatedData);
-            
-            // Log success
-            Log::info('Barcode successfully saved:', $checkin->toArray());
+            // Check if barcode was already checked in
+            $existingCheckin = InventoryCheckin::where('barcode', $validatedData['barcode'])->first();
+            if ($existingCheckin) {
+                $existingLocation = Location::find($existingCheckin->location_id);
+                return response()->json([
+                    'success' => false,
+                    'message' => "Barcode already checked in! Location: {$existingLocation->name}, Line: {$existingLocation->location_line_id}"
+                ], 400);
+            }
 
-            return response()->json(['success' => true, 'message' => 'Barcode saved successfully!']);
+            // Begin transaction
+            DB::beginTransaction();
+
+            // Save scanned barcode data
+            $checkin = InventoryCheckin::create([
+                'barcode' => $validatedData['barcode'],
+                'item_id' => $validatedData['item_id'],
+                'location_id' => $validatedData['location_id'],
+                'quantity' => 1, // Assuming quantity is always 1 per barcode
+                'purchase_code' => $validatedData['purchase_code'],
+                'user_id' => $validatedData['user_id']
+            ]);
+
+            // 🔄 Step 1: Recalculate total quantity in this location
+            $totalQuantity = InventoryCheckin::where('location_id', $validatedData['location_id'])
+                ->sum('quantity');
+
+            // 🔄 Step 2: Update `current_capacity` in `locations` table
+            Location::where('id', $validatedData['location_id'])
+                ->update(['current_capacity' => $totalQuantity]);
+
+            // Commit transaction
+            DB::commit();
+
+            // Log success
+            Log::info('Barcode successfully saved and location updated:', [
+                'barcode' => $validatedData['barcode'],
+                'new_current_capacity' => $totalQuantity
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Barcode saved successfully!',
+                'new_capacity' => $totalQuantity
+            ]);
 
         } catch (ValidationException $e) {
             // Log validation errors
             Log::error('Validation Error:', $e->errors());
-            return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $e->errors()], 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
-            // Log unexpected errors
+            // Rollback transaction on failure
+            DB::rollBack();
             Log::error('Database Insert Error:', ['message' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => 'Error saving barcode!', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error saving barcode!',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
+ 
     
+
+    public function recalculateLocationCapacity(Request $request)
+{
+    $locationId = $request->location_id;
+
+    // Sum the total quantity of items checked into this location
+    $totalQuantity = DB::table('inventory_checkins')
+        ->where('location_id', $locationId)
+        ->sum('quantity');
+
+    // Update the current_capacity in locations table
+    DB::table('locations')
+        ->where('id', $locationId)
+        ->update(['current_capacity' => $totalQuantity]);
+
+    // Fetch updated location details
+    $location = DB::table('locations')->where('id', $locationId)->first();
+
+    return response()->json([
+        'success' => true,
+        'new_capacity' => $location->current_capacity,
+        'location_name' => $location->name,
+        'location_line_id' => $location->location_line_id,
+        'storage_capacity' => $location->storage_capacity
+    ]);
+}
+
 }
