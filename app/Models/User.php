@@ -114,4 +114,15 @@ class User extends Authenticatable
         return Warehouse::whereIn('id', $warehouseIds)->get();
     }
 
+
+    public function createdBarcodes()
+{
+    return $this->hasMany(ProductBarcode::class, 'created_by');
+}
+
+public function updatedBarcodes()
+{
+    return $this->hasMany(ProductBarcode::class, 'updated_by');
+}
+
 }

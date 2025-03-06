@@ -19,6 +19,7 @@ use App\Models\Tax;
 use App\Models\Unit;
 use App\Models\Warehouse;
 use App\Models\Purchase\Purchase;
+use App\Models\User;
 
 class ItemTransaction extends Model
 {
@@ -182,4 +183,22 @@ class ItemTransaction extends Model
     {
         return $this->belongsTo(Purchase::class);
     }
+
+    public function purchases()
+    {
+        return $this->hasOne(Purchase::class, 'purchase_code', 'transaction_id');
+    }
+
+    public function product()
+{
+    return $this->belongsTo(Item::class, 'item_id');
+}
+
+
+public function creator()
+{
+    return $this->belongsTo(User::class, 'created_by');
+}
+
+
 }

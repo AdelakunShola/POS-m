@@ -352,6 +352,63 @@
 				</li>
 				@endcanany
 
+
+
+
+				
+				<li>
+					<a href="javascript:;" class="has-arrow">
+						<div class="parent-icon"><i class="bx bx-building"></i>
+						</div>
+						<div class="menu-title">Location Management</div>
+					</a>
+					<ul>
+			@can('location.view')
+			<li class="{{ request()->is('location*') ? 'mm-active' : '' }}">
+				<a href="{{ route('location.list') }}"><i class='bx bx-radio-circle'></i>Location</a>
+			</li>
+			@endcan
+
+			@can('location_line.view')
+			<li class="{{ request()->is('location-line*') ? 'mm-active' : '' }}">
+				<a href="{{ route('location_line.list') }}"><i class='bx bx-radio-circle'></i>Location Lines</a>
+			</li>
+			@endcan
+
+
+					</ul>
+				</li>
+
+
+
+
+
+
+
+				<li>
+					<a href="javascript:;" class="has-arrow">
+						<div class="parent-icon"><i class="bx bx-building"></i>
+						</div>
+						<div class="menu-title">Transaction</div>
+					</a>
+					<ul>
+			
+			<li class="">
+				<a href="{{ route('checkin.item') }}"><i class='bx bx-radio-circle'></i>CheckIn</a>
+			</li>
+		
+
+			<li class="">
+				<a href=""><i class='bx bx-radio-circle'></i>Pickup</a>
+			</li>
+		
+
+					</ul>
+				</li>
+				
+
+				
+
 				@canany(['import.item', 'import.party', 'generate.barcode'])
 				<li>
 					<a href="javascript:;" class="has-arrow">

@@ -474,3 +474,58 @@
             iframe.contentWindow.postMessage('print', '*');
         }
     });
+
+
+
+
+
+
+
+
+
+
+
+
+
+    async function fetchUniqueBarcode() {
+        try {
+            let response = await fetch('/generate-barcode'); // Laravel route
+            let data = await response.json();
+            return data.barcode;
+        } catch (error) {
+            console.error("Error fetching barcode:", error);
+            return Math.floor(100000000000 + Math.random() * 900000000000).toString(); // Fallback
+        }
+    }
+    
+    document.getElementById('generate').addEventListener('click', async function () {
+        let tableRows = document.querySelectorAll('#itemsTable tbody tr');
+        let barcodeData = [];
+        let barcodeIframe = document.getElementById('barcodeIframe');
+    
+        for (let row of tableRows) {
+            let itemName = row.querySelector('td:nth-child(2)')?.innerText;
+            let quantityField = row.querySelector('td:nth-child(5) input');
+            let quantity = quantityField ? parseInt(quantityField.value) || 1 : 1;
+    
+            for (let i = 0; i < quantity; i++) {
+                fetchUniqueBarcode().then(uniqueBarcode => {
+                    barcodeData.push({
+                        itemName: itemName,
+                        barcode: uniqueBarcode,
+                        quantity: 1
+                    });
+    
+                    // 🔥 Update the barcode **immediately** as it's generated
+                    if (barcodeIframe) {
+                        barcodeIframe.contentWindow.postMessage({
+                            barcode_type: "code128",
+                            size: "1_100x50",
+                            itemData: JSON.stringify(barcodeData)
+                        }, "*");
+                    }
+                });
+            }
+        }
+    });
+    

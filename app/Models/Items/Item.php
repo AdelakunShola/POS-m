@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Unit;
 use App\Models\Items\ItemCategory;
 use App\Models\Items\ItemGeneralQuantity;
+use App\Models\ProductBarcode;
 
 class Item extends Model
 {
@@ -172,5 +173,10 @@ class Item extends Model
     {
         return $this->hasMany(ItemGeneralQuantity::class);
     }
+
+    public function barcodes()
+{
+    return $this->hasMany(ProductBarcode::class);
+}
 
 }

@@ -17,6 +17,7 @@ use App\Models\PaymentTransaction;
 use App\Models\Purchase\Purchase;
 use App\Models\Accounts\AccountTransaction;
 use App\Models\Currency;
+use App\Models\ProductBarcode;
 use App\Models\StatusHistory;
 
 class PurchaseOrder extends Model
@@ -174,5 +175,11 @@ class PurchaseOrder extends Model
     {
         return $this->belongsTo(Currency::class, 'currency_id');
     }
+
+    public function barcodes()
+{
+    return $this->hasMany(ProductBarcode::class);
+}
+
 
 }

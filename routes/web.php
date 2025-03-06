@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Storage;
 
 use App\Http\Controllers\Accounts\AccountController;
 use App\Http\Controllers\Accounts\AccountGroupController;
+use App\Http\Controllers\BarcodeController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\Expenses\ExpenseCategoryController;
 use App\Http\Controllers\Expenses\ExpenseSubcategoryController;
@@ -44,6 +45,8 @@ use App\Http\Controllers\Items\ItemCategoryController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\Items\BrandController;
+use App\Http\Controllers\LocationController;
+use App\Http\Controllers\LocationLineController;
 use App\Http\Controllers\Purchase\PurchaseOrderController;
 use App\Http\Controllers\Purchase\PurchaseController;
 
@@ -419,6 +422,82 @@ Route::middleware('auth')->group(function () {
                 ->middleware('can:tax.delete')
                 ->name('tax.delete');//delete operation
     });
+
+
+
+
+/**
+ * Location Routes
+ */
+Route::group(['prefix' => 'location'], function () {
+    Route::get('/create', [LocationController::class, 'locationCreate'])
+        ->middleware('can:location.create')
+        ->name('location.create'); // View Create Page
+
+    Route::get('/edit/{id}', [LocationController::class, 'locationEdit'])
+        ->middleware('can:location.edit')
+        ->name('location.edit'); // View Edit Page
+
+    Route::post('/update/{id}', [LocationController::class, 'locationUpdate'])
+        ->name('location.update'); // Update Data
+
+    Route::get('/list', [LocationController::class, 'locationList'])
+        ->middleware('can:location.view')
+        ->name('location.list'); // List View Page
+
+    Route::get('/datatable-list', [LocationController::class, 'locationDatatableList'])
+        ->name('location.datatable.list'); // Datatable List
+
+    Route::post('/store', [LocationController::class, 'locationStore'])
+        ->name('location.store'); // Store Data
+
+    Route::post('/delete/', [LocationController::class, 'locationDelete'])
+        ->middleware('can:location.delete')
+        ->name('location.delete'); // Delete Operation
+
+    /**
+     * Load Items for search box for Select2
+     */
+    Route::get('/select2/ajax/get-list', [LocationController::class, 'getAjaxLocationSearchBarList'])
+        ->name('location.select2.list');
+});
+
+/**
+ * Location Line Routes
+ */
+Route::group(['prefix' => 'location-line'], function () {
+    Route::get('/create', [LocationLineController::class, 'create'])
+        ->middleware('can:location_line.create')
+        ->name('location_line.create'); // View Create Page
+
+    Route::get('/edit/{id}', [LocationLineController::class, 'edit'])
+        ->middleware('can:location_line.edit')
+        ->name('location_line.edit'); // View Edit Page
+
+    Route::post('/update', [LocationLineController::class, 'update'])
+        ->name('location_line.update'); // Update Data
+
+    Route::get('/list', [LocationLineController::class, 'list'])
+        ->middleware('can:location_line.view')
+        ->name('location_line.list'); // List View Page
+
+    Route::get('/datatable-list', [LocationLineController::class, 'datatableList'])
+        ->name('location_line.datatable.list'); // Datatable List
+
+    Route::post('/store', [LocationLineController::class, 'store'])
+        ->name('location_line.store'); // Store Data
+
+    Route::post('/delete/', [LocationLineController::class, 'delete'])
+        ->middleware('can:location_line.delete')
+        ->name('location_line.delete'); // Delete Operation
+
+    /**
+     * Load Items for search box for Select2
+     */
+    Route::get('/select2/ajax/get-list', [LocationLineController::class, 'getAjaxLocationLineSearchBarList'])
+        ->name('location_line.select2.list');
+});
+
 
     /**
      * Warehouse
@@ -1165,6 +1244,21 @@ Route::middleware('auth')->group(function () {
         //Route::get('/generate/labels', [ItemController::class, 'datatablePurchaseBillPayment'])->name('purchase.bill.payment.datatable.list'); //Datatable List
 
     });
+
+
+
+    Route::get('/generate-barcode', [BarcodeController::class, 'generateBarcode']);
+    Route::post('/save-barcodes', [BarcodeController::class, 'store']);
+
+    Route::get('/checkIn-item', [BarcodeController::class, 'billList'])->name('checkin.item');
+    Route::post('/checkin/{id}', [BarcodeController::class, 'process'])->name('checkin.process');
+    Route::get('/get-locations/{item_id}', [BarcodeController::class, 'getLocations']);
+
+    Route::post('/validate-barcode', [BarcodeController::class, 'validateBarcode'])->name('barcode.validate');
+    Route::post('/store-scanned-barcode', [BarcodeController::class, 'storeScannedBarcode']);
+
+
+
 
     /**
      * User Profile

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thermal Label Print</title>
@@ -23,13 +24,16 @@
             display: flex;
             page-break-after: always;
         }
+    
         .label {
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 2mm;
-        }
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers content */
+    justify-content: flex-start; /* Aligns everything to the top */
+    padding: 2mm;
+}
+
+
         .company-name {
             font-weight: bold;
             text-align: center;
@@ -37,6 +41,7 @@
         }
         .item-name {
             text-align: center;
+            font-weight: bold;
             margin: 0;
         }
         .price {
@@ -46,7 +51,7 @@
         }
         .main-barcode-container {
             text-align: center;
-            margin-top: auto;
+            margin-top: 5px;
         }
         .barcode-number {
             text-align: center;
@@ -66,9 +71,8 @@
             const label = document.createElement('div');
             label.className = 'label';
             label.innerHTML = `
-                <div class="company-name">${data.companyName}</div>
+         
                 <div class="item-name">${data.itemName}</div>
-                <div class="price">${data.price}</div>
                 <div class="main-barcode-container">
                     <canvas id="main-barcode-${index}" style="width: ${size.barcodeWidth}; height: ${size.barcodeHeight};"></canvas>
                     <div class="barcode-number">${data.barcode}</div>
@@ -125,10 +129,12 @@
                     index >= labelData.slice(0, labelData.indexOf(item)).reduce((sum, curr) => sum + curr.quantity, 0) &&
                     index < labelData.slice(0, labelData.indexOf(item) + 1).reduce((sum, curr) => sum + curr.quantity, 0)
                 );
+
+                console.log("Generating barcode for:", labelData[dataIndex]?.barcode);
                 
                 bwipjs.toCanvas(canvas.id, {
                     bcid: barcodeType,
-                    text: labelData[dataIndex].barcode,
+                    text: String(labelData[dataIndex]?.barcode),
                     scale: 1,
                     height: parseInt(size.barcodeHeight),
                     includetext: false,
@@ -155,5 +161,55 @@
         });
 
     </script>
+
+
+<script>
+    window.addEventListener('message', async function(event) {
+        if (event.data === 'print') {
+            try {
+                if (window.labelData && window.labelData.length > 0) {
+                    console.log("Preparing to save barcode data:", window.labelData);
+
+                    const response = await fetch('/save-barcodes', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({ barcodes: window.labelData })
+                    });
+
+                    const responseData = await response.json();
+                    console.log("Server response:", responseData);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+
+                    console.log("Barcode data saved successfully.");
+                } else {
+                    console.warn("No barcode data available to save.");
+                }
+
+                console.log("Saving complete, now printing...");
+                window.print();
+            } catch (error) {
+                console.error("Failed to save barcode data:", error);
+            }
+        } else {
+            // Handle barcode generation
+            const data = event.data;
+            barcodeType = data.barcode_type;
+            var size = data.size;
+            labelData = JSON.parse(data.itemData);
+
+            const container = document.getElementById('labels-container');
+            container.innerHTML = '';
+
+            updateLabels(size);
+        }
+    });
+</script>
+
 </body>
 </html>
