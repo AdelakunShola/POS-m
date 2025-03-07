@@ -31,4 +31,11 @@ public function warehouse()
     {
         return $this->belongsTo(LocationLine::class); // Adjust if needed
     }
+
+    public function locationLines()
+{
+    return $this->hasMany(LocationLine::class, 'location_id');
+}
+
+
 }
