@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Items\Item;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -34,5 +35,11 @@ public function toLocationLine()
 {
     return $this->belongsTo(LocationLine::class, 'to_location_line_id');
 }
+
+public function item()
+{
+    return $this->belongsTo(Item::class, 'item_id');
+}
+
 
 }

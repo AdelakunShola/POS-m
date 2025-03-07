@@ -401,7 +401,7 @@
 		
 
 			<li class="">
-				<a href=""><i class='bx bx-radio-circle'></i>Pickup</a>
+				<a href="{{ route('pickup.item') }}"><i class='bx bx-radio-circle'></i>Pickup</a>
 			</li>
 
 			<li class="">

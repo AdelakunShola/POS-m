@@ -1250,9 +1250,17 @@ Route::group(['prefix' => 'location-line'], function () {
     Route::get('/generate-barcode', [BarcodeController::class, 'generateBarcode']);
     Route::post('/save-barcodes', [BarcodeController::class, 'store']);
 
+    ///CHECKIN
     Route::get('/checkIn-item', [BarcodeController::class, 'billList'])->name('checkin.item');
     Route::post('/checkin/{id}', [BarcodeController::class, 'process'])->name('checkin.process');
     Route::get('/get-locations/{item_id}', [BarcodeController::class, 'getLocations']);
+
+    //PICKUP
+    Route::get('/pickup-item', [BarcodeController::class, 'SaleList'])->name('pickup.item');
+    Route::get('/get-inventory-details/{itemId}', [BarcodeController::class, 'getInventoryDetails']);
+    Route::post('/scan-out', [BarcodeController::class, 'scanOut']);
+
+
 
     Route::post('/validate-barcode', [BarcodeController::class, 'validateBarcode'])->name('barcode.validate');
     Route::post('/store-scanned-barcode', [BarcodeController::class, 'storeScannedBarcode']);

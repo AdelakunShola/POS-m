@@ -25,7 +25,7 @@
                                     @if($order->purchase)
                                         <a href="{{ route('purchase.bill.details', ['id' => $order->purchase->id]) }}" class="btn btn-outline-success"><i class="bx bx-check-double"></i>{{ __('app.view_bill') }}</a>
                                     @else
-                                        <a href="{{ route('purchase.bill.convert', ['id' => $order->id]) }}" class="btn btn-outline-success"><i class="bx bx-transfer-alt"></i>{{ __('purchase.convert_to_purchase') }}</a>
+                                        <a href="{{ route('purchase.bill.convert', ['id' => $order->id]) }}" class="btn btn-outline-success"><i class="bx bx-transfer-alt"></i>Receive / {{ __('purchase.convert_to_purchase') }}</a>
                                     @endif
 
                                     @can(['purchase.order.edit'])

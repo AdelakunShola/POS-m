@@ -9,10 +9,12 @@ use App\Models\Items\ItemTransaction;
 use App\Models\Location;
 use App\Models\LocationLine;
 use App\Models\ProductBarcode;
+use App\Models\Sale\Sale;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 
 
@@ -107,6 +109,14 @@ class BarcodeController extends Controller
 }
 
     
+
+
+
+
+
+
+
+
 
 
 
@@ -309,9 +319,10 @@ public function validateBarcode(Request $request)
 
 public function transferLocation()
 {
-    $transfers = InventoryTransfer::with('createdBy')->orderBy('created_at', 'desc')->get();
+    $transfers = InventoryTransfer::with(['createdBy', 'item'])->orderBy('created_at', 'desc')->get();
     return view('stock-transfer.list_location_transfer', compact('transfers'));
 }
+
 
 
 public function createTransfer()
@@ -443,6 +454,165 @@ public function storeTransfer(Request $request)
         return response()->json(['success' => false, 'message' => 'Error saving stock transfer.', 'error' => $e->getMessage()], 500);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////PICKUP////////////
+
+public function saleList(Request $request) 
+{
+    $query = ItemTransaction::where('transaction_type', 'sale')
+        ->with(['inventoryPickups.scanner']); // Ensure pickups are loaded
+
+    // Apply date filtering if values are provided
+    if ($request->filled('from_date') && $request->filled('to_date')) {
+        $fromDate = Carbon::parse($request->from_date)->startOfDay();
+        $toDate = Carbon::parse($request->to_date)->endOfDay();
+        $query->whereBetween('transaction_date', [$fromDate, $toDate]);
+    }
+
+    $pickup = $query->latest()->get();
+
+    Log::info('Sale Transactions with Pickups:', ['pickup' => $pickup->toArray()]);
+
+    return view('transaction.pickup', compact('pickup'));
+}
+
+
+
+
+
+public function getInventoryDetails($itemId)
+{
+    $inventory = DB::table('inventory_checkins')
+        ->join('locations', 'inventory_checkins.location_id', '=', 'locations.id')
+        ->join('location_lines', 'inventory_checkins.location_line_id', '=', 'location_lines.id')
+        ->where('inventory_checkins.item_id', $itemId)
+        ->select(
+            'locations.name as location_name',
+            'location_lines.name as location_line_name',
+            DB::raw('SUM(inventory_checkins.quantity) as total_quantity')
+        )
+        ->groupBy('inventory_checkins.location_line_id', 'inventory_checkins.location_id', 'locations.name', 'location_lines.name')
+        ->get();
+
+    return response()->json($inventory);
+}
+
+
+
+public function scanOut(Request $request)
+{
+    $barcode = $request->barcode;
+    $location = $request->location;
+    $transactionId = $request->transaction_id; // Get transaction ID from request
+    $userId = auth()->id(); // Get the logged-in user ID
+
+    if (!$barcode || !$location) {
+        return response()->json(['message' => 'Barcode and location are required.'], 400);
+    }
+
+    // Extract location details
+    [$locationLineName, $locationName] = explode('-', $location);
+
+    // Check if barcode already exists in inventory_pickups for this user
+    $existingPickup = DB::table('inventory_pickups')
+        ->where('barcode', $barcode)
+        ->where('scanned_by', $userId)
+        ->first();
+
+    if ($existingPickup) {
+        return response()->json([
+            'message' => 'Barcode already scanned out already.',
+            'scanned_by' => $existingPickup->scanned_by,
+            'scanned_at' => $existingPickup->created_at
+        ], 400);
+    }
+
+    // Verify if the barcode exists in the selected location and location line
+    $inventory = DB::table('inventory_checkins')
+        ->join('locations', 'inventory_checkins.location_id', '=', 'locations.id')
+        ->join('location_lines', 'inventory_checkins.location_line_id', '=', 'location_lines.id')
+        ->where('inventory_checkins.barcode', $barcode)
+        ->where('location_lines.name', $locationLineName)
+        ->where('locations.name', $locationName)
+        ->select(
+            'inventory_checkins.id',
+            'inventory_checkins.item_id',
+            'inventory_checkins.quantity',
+            'inventory_checkins.location_id',
+            'inventory_checkins.location_line_id',
+            'locations.id as location_id',
+            'locations.current_capacity'
+        )
+        ->first();
+
+    if (!$inventory) {
+        return response()->json(['message' => 'Barcode not found in the selected location and location line.'], 404);
+    }
+
+    // Ensure the quantity is greater than zero before decrementing
+    if ($inventory->quantity <= 0) {
+        return response()->json(['message' => 'No available quantity for this item in the selected location.'], 400);
+    }
+
+    DB::transaction(function () use ($inventory, $barcode, $transactionId, $userId, $locationName, $locationLineName) {
+        // Update inventory (reduce quantity by 1)
+        DB::table('inventory_checkins')
+            ->where('id', $inventory->id)
+            ->update([
+                'quantity' => DB::raw('quantity - 1'),
+                'current_capacity' => DB::raw('current_capacity - 1')
+    ]);
+
+        // Reduce current capacity in the locations table
+        DB::table('locations')
+            ->where('id', $inventory->location_id)
+            ->decrement('current_capacity', 1);
+
+        // Insert scanned item into inventory_pickups
+        DB::table('inventory_pickups')->insert([
+            'transaction_id' => $transactionId, // Save transaction ID
+            'item_id' => $inventory->item_id,
+            'barcode' => $barcode,
+            'location_id' => $inventory->location_id,
+            'location_name' => $locationName,
+            'location_line_id' => $inventory->location_line_id,
+            'scanned_by' => $userId,
+            'quantity' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    });
+
+    return response()->json(['message' => 'Item scanned out successfully!']);
+}
+
+
+
 
 
 }

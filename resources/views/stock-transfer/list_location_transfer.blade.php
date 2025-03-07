@@ -60,12 +60,13 @@
                                     <th>#</th>
                                     <!--<th>Transfer Code</th>-->
                                     <th>Barcode</th>
+                                    <th>Product Name</th>
                                     <th>Date</th>
                                     <th>Tranfer From</th>
                                     <th>Transfer To</th>
-                                    <th>Transfer By</th>
+                                    <th>Transferred By</th>
                                     <th>Created At</th>
-                                    <th>{{ __('app.action') }}</th>
+                                   <!-- <th>{{ __('app.action') }}</th>-->
                                 </tr>
                             </thead>
                             <tbody>
@@ -74,12 +75,13 @@
                                         <td>{{ $index + 1 }}</td>
                                         <!--<td>{{ $transfer->transfer_code }}</td>-->
                                         <td>{{ $transfer->barcode }}</td>
+                                        <td>{{ $transfer->item->name ?? 'N/A' }}</td>
                                         <td>{{ $transfer->transfer_date }}</td>
                                         <td>{{ $transfer->fromLocationLine->name ?? 'N/A' }} - {{ $transfer->fromLocation->name ?? 'N/A' }} </td>
                                         <td>{{ $transfer->toLocationLine->name ?? 'N/A' }} - {{ $transfer->toLocation->name ?? 'N/A' }} </td>
                                         <td>{{ $transfer->createdBy->username ?? 'N/A' }}</td>
                                         <td>{{ $transfer->created_at->format('Y-m-d H:i') }}</td>
-                                        <td>
+                                        <!--<td>
                                             <a href="" class="btn btn-info btn-sm">{{ __('View') }}</a>
                                             <a href="" class="btn btn-warning btn-sm">{{ __('Edit') }}</a>
                                             <form action="" method="POST" class="d-inline">
@@ -87,7 +89,7 @@
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">{{ __('Delete') }}</button>
                                             </form>
-                                        </td>
+                                        </td>-->
                                     </tr>
                                 @endforeach
 

@@ -13,6 +13,7 @@ use App\Traits\FormatsDateInputs;
 use App\Models\Items\ItemBatchTransaction;
 use App\Models\Items\ItemSerialTransaction;
 use App\Models\Accounts\AccountTransaction;
+use App\Models\InventoryPickup;
 use App\Models\Items\Item;
 use App\Models\Items\ItemStockTransfer;
 use App\Models\Tax;
@@ -199,6 +200,23 @@ public function creator()
 {
     return $this->belongsTo(User::class, 'created_by');
 }
+
+
+public function pickedItems()
+{
+    return $this->hasMany(InventoryPickup::class, 'transaction_id', 'transaction_id');
+}
+
+public function totalQuantityPicked()
+{
+    return $this->pickedItems()->sum('quantity');
+}
+
+public function inventoryPickups()
+{
+    return $this->hasMany(InventoryPickup::class, 'transaction_id', 'transaction_id');
+}
+
 
 
 }

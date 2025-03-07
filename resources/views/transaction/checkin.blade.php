@@ -116,7 +116,7 @@
                 <select id="locationSelect" class="form-control"></select>
 
               
-    <label for="barcodeScanner">Scan Barcode:</label>
+    <label for="barcodeScanner">Scan Barcode In:</label>
     <input type="text" id="barcodeScanner" class="form-control" autofocus>
     
     <p>Scanned Count: <span id="barcodeCount">0</span></p>
