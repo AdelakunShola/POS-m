@@ -37,26 +37,24 @@
 
                                 <select class="party-ajax form-select" data-party-type='supplier' data-placeholder="Select Supplier" id="party_id" name="party_id"></select>
                             </div>
-                            <div class="col-md-3">
-                                <x-label for="user_id" name="{{ __('user.user') }}" />
-                                <x-dropdown-user selected="" :showOnlyUsername='true' :canViewAllUsers="auth()->user()->can('purchase.bill.can.view.other.users.purchase.bills')" />
-                            </div>
-                            <div class="col-md-3">
-                                <x-label for="from_date" name="{{ __('app.from_date') }}" />
-                                <a tabindex="0" class="text-primary" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="Filter by Purchase Date"><i class="fadeIn animated bx bx-info-circle"></i></a>
-                                <div class="input-group mb-3">
-                                    <x-input type="text" additionalClasses="datepicker-edit" name="from_date" :required="true" value=""/>
-                                    <span class="input-group-text" id="input-near-focus" role="button"><i class="fadeIn animated bx bx-calendar-alt"></i></span>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <x-label for="to_date" name="{{ __('app.to_date') }}" />
-                                <a tabindex="0" class="text-primary" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="Filter by Purchase Date"><i class="fadeIn animated bx bx-info-circle"></i></a>
-                                <div class="input-group mb-3">
-                                    <x-input type="text" additionalClasses="datepicker-edit" name="to_date" :required="true" value=""/>
-                                    <span class="input-group-text" id="input-near-focus" role="button"><i class="fadeIn animated bx bx-calendar-alt"></i></span>
-                                </div>
-                            </div>
+                            <div class="row g-3">
+    <div class="col-md-3">
+        <x-label for="start_date" name="Start Date" />
+        <input type="date" id="start_date" name="start_date" class="form-control" value="{{ request('start_date') }}">
+    </div>
+
+    <div class="col-md-3">
+        <x-label for="end_date" name="End Date" />
+        <input type="date" id="end_date" name="end_date" class="form-control" value="{{ request('end_date') }}">
+    </div>
+
+    <div class="col-md-3 align-self-end">
+        <button type="submit" class="btn btn-primary" onclick="filterTransactions()">Filter</button>
+    </div>
+</div>
+
+
+
                         </div>
 
                        
@@ -372,6 +370,15 @@ $(document).ready(function () {
 
 
 
+</script>
+
+<script>
+function filterTransactions() {
+    let startDate = document.getElementById("start_date").value;
+    let endDate = document.getElementById("end_date").value;
+    let url = `?start_date=${startDate}&end_date=${endDate}`;
+    window.location.href = url;
+}
 </script>
 
 @endsection

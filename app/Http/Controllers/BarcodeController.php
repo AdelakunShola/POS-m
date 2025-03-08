@@ -69,26 +69,32 @@ class BarcodeController extends Controller
 
 
 
-    public function billList()
-{
-    $bills = ItemTransaction::with(['purchase.party', 'creator', 'item'])
-        ->where('transaction_type', 'Purchase')
-        ->latest()
-        ->get();
-
-    // Join inventory_checkins with users to get the username
-    $purchases = DB::table('inventory_checkins')
-        ->join('users', 'inventory_checkins.user_id', '=', 'users.id') // Join users table
-        ->select(
-            'inventory_checkins.purchase_code',
-            DB::raw('SUM(quantity) as total_quantity'),
-            'users.username as user_name' // Fetch username instead of name
-        )
-        ->groupBy('inventory_checkins.purchase_code', 'users.username')
-        ->get();
-
-    return view('transaction.checkin', compact('bills', 'purchases'));
-}
+    public function billList(Request $request)
+    {
+        $query = ItemTransaction::with(['purchase.party', 'creator', 'item'])
+            ->where('transaction_type', 'Purchase');
+    
+        // Filter by transaction date if selected
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $query->whereBetween('transaction_date', [$request->start_date, $request->end_date]);
+        }
+    
+        $bills = $query->latest()->get();
+    
+        // Fetch purchases with username
+        $purchases = DB::table('inventory_checkins')
+            ->join('users', 'inventory_checkins.user_id', '=', 'users.id')
+            ->select(
+                'inventory_checkins.purchase_code',
+                DB::raw('SUM(quantity) as total_quantity'),
+                'users.username as user_name'
+            )
+            ->groupBy('inventory_checkins.purchase_code', 'users.username')
+            ->get();
+    
+        return view('transaction.checkin', compact('bills', 'purchases'));
+    }
+    
 
     
 
