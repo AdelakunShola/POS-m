@@ -76,16 +76,21 @@ class BarcodeController extends Controller
         ->latest()
         ->get();
 
-        $purchases = DB::table('inventory_checkins')
-    ->select('purchase_code', DB::raw('SUM(quantity) as total_quantity'))
-    ->groupBy('purchase_code')
-    ->get();
-
-
-
+    // Join inventory_checkins with users to get the username
+    $purchases = DB::table('inventory_checkins')
+        ->join('users', 'inventory_checkins.user_id', '=', 'users.id') // Join users table
+        ->select(
+            'inventory_checkins.purchase_code',
+            DB::raw('SUM(quantity) as total_quantity'),
+            'users.username as user_name' // Fetch username instead of name
+        )
+        ->groupBy('inventory_checkins.purchase_code', 'users.username')
+        ->get();
 
     return view('transaction.checkin', compact('bills', 'purchases'));
 }
+
+    
 
 
 

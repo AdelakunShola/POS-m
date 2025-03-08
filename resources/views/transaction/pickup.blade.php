@@ -142,9 +142,10 @@
 
 
                 <div class="mb-3">
-                    <label for="barcodeInput" class="form-label">Scan Barcode:</label>
-                    <input type="text" id="barcodeInput" class="form-control" placeholder="Scan barcode here...">
-                </div>
+    <label for="barcodeInput" class="form-label">Scan Barcode:</label>
+    <input type="text" id="barcodeInput" class="form-control" placeholder="Scan barcode here..." disabled>
+</div>
+
 
                 <div class="mb-3">
     <label>Successful Scans: <span id="scanCount">0</span></label>
@@ -216,16 +217,17 @@
 @section('js')
 <script>
 $(document).ready(function () {
-    let scanCount = 0; // Counter for successful scans
+    let scanCount = 0;
 
     $(".pickup-btn").on("click", function () {
         let itemId = $(this).data("item-id");
-        let saleCode = $(this).closest("tr").find("td:eq(1)").text().trim(); // Get sale code (transaction_id)
+        let saleCode = $(this).closest("tr").find("td:eq(1)").text().trim();
 
         $("#pickupDetails").html('<tr><td colspan="3">Loading...</td></tr>');
         $("#locationDropdown").html('<option value="">Select a location...</option>');
-        $("#scanCount").text(scanCount); // Initialize scan count
-        $("#saleCodeInput").val(saleCode); // Store sale code in hidden input
+        $("#barcodeInput").prop("disabled", true); // Disable initially
+        $("#scanCount").text(scanCount);
+        $("#saleCodeInput").val(saleCode);
 
         $.ajax({
             url: "/get-inventory-details/" + itemId,
@@ -237,7 +239,7 @@ $(document).ready(function () {
                 let hasValidLocations = false;
 
                 response.forEach(function (item) {
-                    if (item.total_quantity > 0) { // Only include locations with available stock
+                    if (item.total_quantity > 0) {
                         hasValidLocations = true;
 
                         $("#pickupDetails").append(`
@@ -256,7 +258,6 @@ $(document).ready(function () {
                     }
                 });
 
-                // If no valid locations, show message
                 if (!hasValidLocations) {
                     $("#pickupDetails").html('<tr><td colspan="3">No available stock.</td></tr>');
                 }
@@ -267,18 +268,25 @@ $(document).ready(function () {
         });
     });
 
-    // Auto-submit on barcode scan
+    // Enable or disable barcode input based on location selection
+    $("#locationDropdown").on("change", function () {
+        let selectedLocation = $(this).val();
+        $("#barcodeInput").prop("disabled", selectedLocation === "");
+    });
+
+    // Prevent scanning if no location is selected
     $("#barcodeInput").on("input", function () {
+        if ($("#barcodeInput").prop("disabled")) {
+            alert("Please select a location first.");
+            $(this).val(""); // Clear input
+            return;
+        }
+
         let barcode = $(this).val().trim();
         let selectedLocation = $("#locationDropdown").val();
-        let saleCode = $("#saleCodeInput").val(); // Get transaction_id
+        let saleCode = $("#saleCodeInput").val();
 
-        if (barcode.length < 6) return; // Adjust based on barcode length
-
-        if (!selectedLocation) {
-            alert("Please select a location.");
-            return;
-        }
+        if (barcode.length < 6) return;
 
         $.ajax({
             url: "/scan-out",
@@ -286,68 +294,22 @@ $(document).ready(function () {
             data: {
                 barcode: barcode,
                 location: selectedLocation,
-                transaction_id: saleCode, // Include transaction ID
+                transaction_id: saleCode,
                 _token: $('meta[name="csrf-token"]').attr("content"),
             },
             success: function () {
-                scanCount++; // Increment scan count
-                $("#scanCount").text(scanCount); // Update displayed count
-                $("#barcodeInput").val(""); // Clear input for next scan
+                scanCount++;
+                $("#scanCount").text(scanCount);
+                $("#barcodeInput").val("");
             },
             error: function (xhr) {
-                if (xhr.status === 400 && xhr.responseJSON.message === "Barcode already scanned out by you.") {
-                    alert(`Error: ${xhr.responseJSON.message}\nScanned At: ${xhr.responseJSON.scanned_at}`);
-                } else {
-                    alert("Error scanning out: " + xhr.responseJSON.message);
-                }
-                $("#barcodeInput").val(""); // Clear input on error
+                alert("Error scanning out: " + xhr.responseJSON.message);
+                $("#barcodeInput").val("");
             },
         });
     });
-
-    // Handle Scan Out button click
-    $("#scanOutBtn").on("click", function () {
-        let barcode = $("#barcodeInput").val().trim();
-        let selectedLocation = $("#locationDropdown").val();
-        let saleCode = $("#saleCodeInput").val(); // Get transaction_id
-
-        if (!barcode || barcode.length < 6) {
-            alert("Please scan a valid barcode.");
-            return;
-        }
-
-        if (!selectedLocation) {
-            alert("Please select a location.");
-            return;
-        }
-
-        $.ajax({
-            url: "/scan-out",
-            type: "POST",
-            data: {
-                barcode: barcode,
-                location: selectedLocation,
-                transaction_id: saleCode, // Include transaction ID
-                _token: $('meta[name="csrf-token"]').attr("content"),
-            },
-            success: function () {
-                scanCount++; // Increment scan count
-                $("#scanCount").text(scanCount); // Update displayed count
-                $("#barcodeInput").val(""); // Clear input for next scan
-                alert("Item scanned out successfully!");
-            },
-            error: function (xhr) {
-                if (xhr.status === 400 && xhr.responseJSON.message === "Barcode already scanned out by you.") {
-                    alert(`Error: ${xhr.responseJSON.message}\nScanned At: ${xhr.responseJSON.scanned_at}`);
-                } else {
-                    alert("Error scanning out: " + xhr.responseJSON.message);
-                }
-                $("#barcodeInput").val(""); // Clear input on error
-            },
-        });
-    });
-
 });
+
 
 </script>
 <script>

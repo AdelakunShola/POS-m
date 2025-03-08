@@ -20,7 +20,7 @@
                     <div class="card-header px-4 py-3 d-flex justify-content-between">
                         <!-- Other content on the left side -->
                         <div>
-                            <h5 class="mb-0 text-uppercase">Received Purchase Order List</h5>
+                            <h5 class="mb-0 text-uppercase"> Purchase Order Ready For Check-In</h5>
                         </div>
 
                          @can('purchase.bill.create')
@@ -71,11 +71,9 @@
                 <th>supplier</th>
                 <th>{{ __('Product Name') }}</th> <!-- Added Product Name Column -->
                 <th>{{ __('Quantity Purchased') }}</th>
-                <th>Quantity Received</th>
-                <th>{{ __('app.total') }}</th>
-                <th>{{ __('payment.balance') }}</th>
-                <th>{{ __('app.created_by') }}</th>
-                <th>{{ __('app.created_at') }}</th>
+                <th>Quantity Checked-In</th>
+                <th>Check-In By</th>
+                
                 <th>{{ __('app.action') }}</th>
             </tr>
         </thead>
@@ -92,11 +90,12 @@
                     <td>
     {{ $purchases->where('purchase_code', $bill->transaction_id)->sum('total_quantity') }}
 </td>
+<td>
+    {{ $purchases->where('purchase_code', $bill->transaction_id)->first()->user_name ?? 'N/A' }}
+</td>
 
-                    <td>{{ number_format($bill->total, 2) }}</td>
-                    <td>{{ number_format($bill->balance, 2) }}</td>
-                    <td>{{ $bill->creator->username }}</td>
-                    <td>{{ $bill->created_at }}</td>
+
+                    
                     <td>
     <button class="btn btn-primary checkin-btn" data-item-id="{{ $bill->item_id }}">
         Check-in
@@ -158,11 +157,6 @@
 @section('js')
 <script src="{{ versionedAsset('assets/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ versionedAsset('assets/plugins/datatable/js/dataTables.bootstrap5.min.js') }}"></script>
-<script src="{{ versionedAsset('custom/js/common/common.js') }}"></script>
-<script src="{{ versionedAsset('custom/js/purchase/purchase-bill-list.js') }}"></script>
-<script src="{{ versionedAsset('custom/js/modals/payment/invoice-payment.js') }}"></script>
-<script src="{{ versionedAsset('custom/js/modals/email/send.js') }}"></script>
-<script src="{{ versionedAsset('custom/js/sms/sms.js') }}"></script>
 
 <script>
 $(document).ready(function () {
