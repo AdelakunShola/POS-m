@@ -30,13 +30,7 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-3">
-                                <x-label for="party_id" name="{{ __('supplier.suppliers') }}" />
-
-                                <a tabindex="0" class="text-primary" data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-content="Search by name, mobile, phone, whatsApp, email"><i class="fadeIn animated bx bx-info-circle"></i></a>
-
-                                <select class="party-ajax form-select" data-party-type='supplier' data-placeholder="Select Supplier" id="party_id" name="party_id"></select>
-                            </div>
+                           
                             <div class="row g-3">
     <div class="col-md-3">
         <x-label for="start_date" name="Start Date" />
@@ -69,6 +63,7 @@
         </div>
     </div>
 </form>
+
 </div>
 
 
@@ -78,80 +73,98 @@
                        
                         <div class="table-responsive">
     <table class="table table-striped table-bordered border w-100" id="datatable">
-        <thead>
-            <tr>
-                <th class="d-none"><!-- Which Stores ID & it is used for sorting --></th>
-                <th><input class="form-check-input row-select" type="checkbox"></th>
-                <th>{{ __('purchase.code') }}</th>
-                <th>{{ __('app.date') }}</th>
-                <th>supplier</th>
-                <th>{{ __('Product Name') }}</th> <!-- Added Product Name Column -->
-                <th>{{ __('Quantity Purchased') }}</th>
-                <th>Quantity Checked-In</th>
-                <th>Check-In By</th>
-                
-                <th>{{ __('app.action') }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($bills as $bill)
-                <tr>
-                    <td class="d-none">{{ $bill->id }}</td>
-                    <td><input class="form-check-input row-select" type="checkbox"></td>
-                    <td>{{ $bill->transaction_id }}</td>
-                    <td>{{ $bill->transaction_date }}</td>
-                    <td>{{ $bill->purchases->party->first_name ?? 'N/A' }}</td> <!-- Adjust this to display supplier name if needed -->
-                    <td>{{ $bill->product->name }}</td> <!-- Display Product Name -->
-                    <td>{{ $bill->quantity }}</td> 
-                    <td>
-    {{ $purchases->where('purchase_code', $bill->transaction_id)->sum('total_quantity') }}
-</td>
-<td>
-    {{ $purchases->where('purchase_code', $bill->transaction_id)->first()->user_name ?? 'N/A' }}
-</td>
+    <thead>
+    <tr>
+        <th class="d-none"><!-- Hidden for sorting --></th>
+        <th><input class="form-check-input row-select" type="checkbox"></th>
+        <th>{{ __('purchase.code') }}</th>
+        <th>{{ __('app.date') }}</th>
+        <th>Supplier</th>
+        <th>{{ __('Product Name') }}</th> <!-- Product Name -->
+        <th>{{ __('Quantity Purchased') }}</th>
+        <th>Quantity Checked-In</th>
+        <th>Check-In By</th>
+        <th>Status</th> <!-- Status Column -->
+        <th>{{ __('app.action') }}</th>
+    </tr>
+</thead>
+<tbody>
+    @foreach($bills as $bill)
+        <tr>
+            <td class="d-none">{{ $bill->id }}</td>
+            <td><input class="form-check-input row-select" type="checkbox"></td>
+            <td>{{ $bill->transaction_id }}</td>
+            <td>{{ $bill->transaction_date }}</td>
+            <td>{{ $bill->purchases->party->first_name ?? 'N/A' }}</td> <!-- Supplier -->
+            <td>{{ $bill->product->name }}</td> <!-- Product Name -->
+            <td>{{ $bill->quantity }}</td> 
 
+            <!-- Quantity Checked-In -->
+            <td>
+                {{ $purchases->where('purchase_code', $bill->transaction_id)->sum('total_quantity') }}
+            </td>
 
-                    
-                    <td>
-    <button class="btn btn-primary checkin-btn" data-item-id="{{ $bill->item_id }}">
-        Check-in
-    </button>
+            <!-- Checked-In By -->
+            <td>
+                {{ $purchases->where('purchase_code', $bill->transaction_id)->first()->user_name ?? 'N/A' }}
+            </td>
 
-    <div class="modal fade" id="checkinModal" tabindex="-1">
-    <input type="hidden" id="purchaseCode" value="{{ $bill->transaction_id }}">
-    <meta name="user-id" content="{{ auth()->id() }}">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Select Location</h5>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <label for="locationSelect">Choose a Location:</label>
-                <select id="locationSelect" class="form-control"></select>
+            <!-- Status Calculation -->
+            <td>
+                @php
+                    $quantityPurchased = $bill->quantity;
+                    $quantityCheckedIn = $purchases->where('purchase_code', $bill->transaction_id)->sum('total_quantity');
 
-              
-    <label for="barcodeScanner">Scan Barcode In:</label>
-    <input type="text" id="barcodeScanner" class="form-control" autofocus>
-    
-    <p>Scanned Count: <span id="barcodeCount">0</span></p>
-    <ul id="scannedBarcodes"></ul>
+                    if ($quantityCheckedIn == 0) {
+                        $status = 'Pending';
+                        $color = 'badge bg-danger'; // Red
+                    } elseif ($quantityCheckedIn == $quantityPurchased) {
+                        $status = 'Completely Picked';
+                        $color = 'badge bg-success'; // Green
+                    } else {
+                        $status = 'Partially Picked';
+                        $color = 'badge bg-warning'; // Yellow
+                    }
+                @endphp
+                <span class="{{ $color }}">{{ $status }}</span>
+            </td>
 
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success">Check-in</button>
-            </div>
-        </div>
-    </div>
-</div>
+            <!-- Check-in Button with Modal -->
+            <td>
+                <button class="btn btn-primary checkin-btn" data-item-id="{{ $bill->item_id }}">
+                    Check-in
+                </button>
 
-</td>
+                <div class="modal fade" id="checkinModal" tabindex="-1">
+                    <input type="hidden" id="purchaseCode" value="{{ $bill->transaction_id }}">
+                    <meta name="user-id" content="{{ auth()->id() }}">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Select Location</h5>
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <label for="locationSelect">Choose a Location:</label>
+                                <select id="locationSelect" class="form-control"></select>
 
+                                <label for="barcodeScanner">Scan Barcode In:</label>
+                                <input type="text" id="barcodeScanner" class="form-control" autofocus>
 
+                                <p>Scanned Count: <span id="barcodeCount">0</span></p>
+                                <ul id="scannedBarcodes"></ul>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-success">Check-in</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    @endforeach
+</tbody>
 
-                </tr>
-            @endforeach
-        </tbody>
     </table>
 </div>
 
