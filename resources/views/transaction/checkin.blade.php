@@ -48,9 +48,27 @@
         <input type="date" id="end_date" name="end_date" class="form-control" value="{{ request('end_date') }}">
     </div>
 
+  
     <div class="col-md-3 align-self-end">
         <button type="submit" class="btn btn-primary" onclick="filterTransactions()">Filter</button>
     </div>
+
+    <form method="GET">
+    <div class="row g-3 mt-3">
+        <!-- User Filter (Independent) -->
+        <div class="col-md-3">
+            <x-label for="user_id" name="User" />
+            <select id="user_id" name="user_id" class="form-control" onchange="this.form.submit()">
+                <option value="">All Users</option>
+                @foreach($users as $user)
+                    <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
+                        {{ $user->username }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    </div>
+</form>
 </div>
 
 
@@ -380,5 +398,7 @@ function filterTransactions() {
     window.location.href = url;
 }
 </script>
+
+
 
 @endsection

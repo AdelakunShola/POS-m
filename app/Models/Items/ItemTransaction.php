@@ -13,6 +13,7 @@ use App\Traits\FormatsDateInputs;
 use App\Models\Items\ItemBatchTransaction;
 use App\Models\Items\ItemSerialTransaction;
 use App\Models\Accounts\AccountTransaction;
+use App\Models\InventoryCheckin;
 use App\Models\InventoryPickup;
 use App\Models\Items\Item;
 use App\Models\Items\ItemStockTransfer;
@@ -215,6 +216,11 @@ public function totalQuantityPicked()
 public function inventoryPickups()
 {
     return $this->hasMany(InventoryPickup::class, 'transaction_id', 'transaction_id');
+}
+
+public function inventoryCheckins()
+{
+    return $this->hasMany(InventoryCheckin::class, 'purchase_code', 'transaction_id');
 }
 
 

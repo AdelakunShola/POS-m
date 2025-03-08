@@ -74,9 +74,16 @@ class BarcodeController extends Controller
         $query = ItemTransaction::with(['purchase.party', 'creator', 'item'])
             ->where('transaction_type', 'Purchase');
     
-        // Filter by transaction date if selected
+        // Filter by transaction date
         if ($request->has('start_date') && $request->has('end_date')) {
             $query->whereBetween('transaction_date', [$request->start_date, $request->end_date]);
+        }
+    
+        // If filtering by user_id, join with inventory_checkins
+        if ($request->has('user_id') && !empty($request->user_id)) {
+            $query->whereHas('inventoryCheckins', function ($q) use ($request) {
+                $q->where('user_id', $request->user_id);
+            });
         }
     
         $bills = $query->latest()->get();
@@ -92,8 +99,12 @@ class BarcodeController extends Controller
             ->groupBy('inventory_checkins.purchase_code', 'users.username')
             ->get();
     
-        return view('transaction.checkin', compact('bills', 'purchases'));
+        // Fetch all users for the dropdown filter
+        $users = DB::table('users')->select('id', 'username')->get();
+    
+        return view('transaction.checkin', compact('bills', 'purchases', 'users'));
     }
+    
     
 
     
