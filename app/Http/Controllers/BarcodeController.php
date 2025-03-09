@@ -10,6 +10,7 @@ use App\Models\Location;
 use App\Models\LocationLine;
 use App\Models\ProductBarcode;
 use App\Models\Sale\Sale;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
@@ -636,5 +637,27 @@ public function scanOut(Request $request)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+////////////CYCLE COUNT
+
+public function createCyclecount()
+{
+    $users = User::latest()->get();
+    $items = Item::latest()->get();
+
+    return view('cycle-count.create_cycle_count', compact('users', 'items'));
+}
 
 }

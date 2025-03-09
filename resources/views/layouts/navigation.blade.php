@@ -407,6 +407,10 @@
 			<li class="">
 				<a href="{{ route('location_transfer.index') }}"><i class='bx bx-radio-circle'></i>Stock Transfer</a>
 			</li>
+
+			<li class="">
+				<a href="{{ route('cycle_count.create') }}"><i class='bx bx-radio-circle'></i>Cycle Count</a>
+			</li>
 		
 
 					</ul>
