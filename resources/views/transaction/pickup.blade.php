@@ -94,9 +94,9 @@
 
      
     @endphp
-    <tr class="{{ $statusClass }}" data-status="{{ $statusText }}">
+    <tr class="" data-status="{{ $statusText }}">
         <td><input class="form-check-input row-select" type="checkbox"></td>
-        <td>{{ $sale->transaction_id }}</td>
+        <td class="{{ $statusClass }}" >{{ $sale->transaction_id }}</td>
         <td>{{ $sale->transaction_date }}</td>
         <td>{{ $sale->product->name }}</td>
         <td>{{ $sale->quantity }}</td>
