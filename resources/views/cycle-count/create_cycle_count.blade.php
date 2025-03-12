@@ -10,10 +10,8 @@
                                             'Cycle Count',
                                         ]"/>
                 <div class="row">
-                    <form class="g-3 needs-validation" id="invoiceForm" action="{{ route('purchase.order.store') }}" enctype="multipart/form-data">
-                        {{-- CSRF Protection --}}
-                        @csrf
-                        @method('POST')
+                <form class="g-3 needs-validation" id="cycleCountForm" action="{{ route('cycle-count.store') }}" method="POST">
+                @csrf
 
                    
                         <div class="row">

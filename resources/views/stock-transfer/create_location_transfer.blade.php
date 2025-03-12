@@ -161,18 +161,21 @@ $(document).ready(function () {
     }
 
     function addToTable(item) {
-        let tableBody = $("#stockTransferItemsTable tbody");
-        let defaultRow = tableBody.find(".default-row");
+    let tableBody = $("#stockTransferItemsTable tbody");
+    let existingRow = tableBody.find(`tr[data-barcode="${item.barcode}"]`);
 
-        if (defaultRow.length) {
-            defaultRow.remove();
-        }
-
+    if (existingRow.length) {
+        // Increment the quantity for existing barcode
+        let quantityCell = existingRow.find(".quantity");
+        let currentQuantity = parseInt(quantityCell.text()) || 0;
+        quantityCell.text(currentQuantity + 1);
+    } else {
+        // Add new row for new barcode
         let newRow = `
-        <tr data-from-location-id="${item.location_id}" data-from-location-line-id="${item.location_line_id}">
+        <tr data-barcode="${item.barcode}" data-from-location-id="${item.location_id}" data-from-location-line-id="${item.location_line_id}">
             <td>${item.barcode}</td>
             <td>${item.item_id}</td>
-            <td class="quantity">${item.quantity}</td>
+            <td class="quantity">1</td>
             <td>${item.location_line_name ?? "N/A"}</td>
             <td>${item.location_name ?? "N/A"}</td>
             <td>
@@ -189,8 +192,10 @@ $(document).ready(function () {
 
         tableBody.append(newRow);
         updateTransferToDropdowns(item.locations_dropdown);
-        updateTotalQuantity();
     }
+    updateTotalQuantity();
+}
+
 
     function updateTransferToDropdowns(locations) {
         let lastRow = $("#stockTransferItemsTable tbody tr").last();
@@ -220,64 +225,65 @@ $(document).ready(function () {
     }
 
     function updateTotalQuantity() {
-        let total = 0;
-        $("#stockTransferItemsTable tbody .quantity").each(function () {
-            total += parseInt($(this).text()) || 0;
-        });
-        $(".sum_of_quantity").text(total);
-    }
-
-    $("#submit_form").click(function (e) {
-        e.preventDefault();
-
-        let transferData = [];
-        $("#stockTransferItemsTable tbody tr").each(function () {
-    let barcode = $(this).find("td:eq(0)").text().trim();
-    let item_id = $(this).find("td:eq(1)").text().trim();
-    let quantity = $(this).find("td:eq(2)").text().trim();
-    let from_location_id = $(this).data("from-location-id");
-    let from_location_line_id = $(this).data("from-location-line-id");
-    let to_location_id = $(this).find(".transfer-to-location-dropdown").val();
-    let to_location_line_id = $(this).find(".transfer-to-line-dropdown").val();
-
-    if (barcode && item_id && quantity && to_location_id && to_location_line_id) {
-        transferData.push({
-    barcode,
-    item_id: item_id ? parseInt(item_id) : null,  
-    to_location_id: to_location_id ? parseInt(to_location_id) : null, 
-    to_location_line_id: to_location_line_id ? parseInt(to_location_line_id) : null,
-    from_location_id: from_location_id ? parseInt(from_location_id) : null, 
-    from_location_line_id: from_location_line_id ? parseInt(from_location_line_id) : null,
-    quantity: parseInt(quantity)
-});
-    }
-});
-
-
-        if (transferData.length === 0) {
-            alert("No items to transfer.");
-            return;
-        }
-
-        $.ajax({
-            url: "{{ route('inventory.transfers.store') }}",
-            type: "POST",
-            data: JSON.stringify({
-                _token: "{{ csrf_token() }}",
-                transfer_date: $("input[name='transfer_date']").val(),
-                transfers: transferData
-            }),
-            contentType: "application/json",
-            success: function (response) {
-                alert("Stock transfer saved successfully!");
-                location.reload();
-            },
-            error: function (xhr) {
-                alert("Error saving stock transfer.");
-                console.log(xhr.responseText);
-            }
-        });
+    let total = 0;
+    $("#stockTransferItemsTable tbody .quantity").each(function () {
+        total += parseInt($(this).text()) || 0;
     });
+    $(".sum_of_quantity").text(total);
+}
+
+
+$("#submit_form").click(function (e) {
+    e.preventDefault();
+
+    let transferData = [];
+    $("#stockTransferItemsTable tbody tr").each(function () {
+        let barcode = $(this).data("barcode");
+        let item_id = $(this).find("td:eq(1)").text().trim();
+        let quantity = $(this).find(".quantity").text().trim();
+        let from_location_id = $(this).data("from-location-id");
+        let from_location_line_id = $(this).data("from-location-line-id");
+        let to_location_id = $(this).find(".transfer-to-location-dropdown").val();
+        let to_location_line_id = $(this).find(".transfer-to-line-dropdown").val();
+
+        if (barcode && item_id && quantity && to_location_id && to_location_line_id) {
+            transferData.push({
+                barcode,
+                item_id: parseInt(item_id),
+                quantity: parseInt(quantity),
+                from_location_id: parseInt(from_location_id),
+                from_location_line_id: parseInt(from_location_line_id),
+                to_location_id: parseInt(to_location_id),
+                to_location_line_id: parseInt(to_location_line_id)
+            });
+        }
+    });
+
+    if (transferData.length === 0) {
+        alert("No items to transfer.");
+        return;
+    }
+
+    $.ajax({
+        url: "{{ route('inventory.transfers.store') }}",
+        type: "POST",
+        data: JSON.stringify({
+            _token: "{{ csrf_token() }}",
+            transfer_date: $("input[name='transfer_date']").val(),
+            transfers: transferData
+        }),
+        contentType: "application/json",
+        success: function (response) {
+            alert("Stock transfer saved successfully!");
+            location.reload();
+        },
+        error: function (xhr) {
+            alert("Error saving stock transfer.");
+            console.log(xhr.responseText);
+        }
+    });
+});
+
 });
 
 </script>

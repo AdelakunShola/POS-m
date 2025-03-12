@@ -660,4 +660,7 @@ public function createCyclecount()
     return view('cycle-count.create_cycle_count', compact('users', 'items'));
 }
 
+
+
+
 }
