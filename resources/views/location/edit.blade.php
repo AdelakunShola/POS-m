@@ -60,7 +60,7 @@
 
 
 
-                            <div class="col-md-4">
+                           <!-- <div class="col-md-4">
                                 <x-label for="warehouse_id" name="Warehouse" />
                                 <div class="input-group">
                                 <select name="warehouse_id">
@@ -71,7 +71,7 @@
                                 </select>
                                 <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target=""><i class="bx me-0"></i>
                               </div>
-                            </div>
+                            </div>-->
 
 
                             <div class="col-md-12">

@@ -17,7 +17,7 @@
                             <tr>
                                 <th>Location Line</th>
                                 <th>{{ __('app.name') }}</th>
-                                <th>Warehouse</th>
+                               <!-- <th>Warehouse</th>-->
                                 <th>Package Type</th>
                                 <th>Storage Capacity</th>
                                 <th>Current Capacity</th>
@@ -29,7 +29,7 @@
                             <tr>
                                 <td>{{ $location->locationLine->name ?? 'N/A' }}</td>
                                 <td>{{ $location->name }}</td>
-                                <td>{{ $location->warehouse->name ?? 'N/A' }}</td>
+                               <!--  <td>{{ $location->warehouse->name ?? 'N/A' }}</td>-->
                                 <td>{{ $location->unit->name ?? 'N/A' }}</td>
                                 <td>{{ $location->storage_capacity }}</td>
                                 <td>{{ $location->current_capacity }}</td>
