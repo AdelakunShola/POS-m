@@ -29,6 +29,7 @@
                                     <th class="d-none"></th>
                                     <th><input class="form-check-input row-select" type="checkbox"></th>
                                     <th>{{ __('app.name') }}</th>
+                                    <th>warehouse</th>
                                     <th>{{ __('app.created_at') }}</th>
                                     <th>{{ __('app.action') }}</th>
                                 </tr>
@@ -39,6 +40,7 @@
                                     <td class="d-none"></td>
                                     <td><input class="form-check-input row-select" type="checkbox"></td>
                                     <td>{{ $line->name }}</td>
+                                    <td>{{ $line->warehouse->name ?? 'N/A' }}</td>
                                     <td>{{ $line->created_at->format('Y-m-d H:i') }}</td>
                                     <td>
                                         {{-- Edit Button --}}

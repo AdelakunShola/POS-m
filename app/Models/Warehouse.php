@@ -53,4 +53,10 @@ class Warehouse extends Model
     return $this->hasMany(ProductBarcode::class);
 }
 
+
+public function locationLines()
+    {
+        return $this->hasMany(LocationLine::class);
+    }
+
 }

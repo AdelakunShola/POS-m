@@ -21,6 +21,9 @@ public function location()
 }
 
 
-
+public function warehouse()
+{
+    return $this->belongsTo(Warehouse::class);
+}
 
 }

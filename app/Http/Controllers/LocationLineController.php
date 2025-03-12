@@ -17,7 +17,8 @@ class LocationLineController extends Controller
 
     public function create(): View
     {
-        return view('location_line.create');
+        $warehouses = Warehouse::all();
+        return view('location_line.create', compact('warehouses'));
     }
 
     public function edit($id): View
@@ -27,20 +28,19 @@ class LocationLineController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $validatedData = $request->validate([
-            'name' => 'required|unique:location_lines,name',
-        ]);
-    
-        // Add `created_by` and `updated_by`
-        $validatedData['created_by'] = Auth::id(); // Get logged-in user ID
-        $validatedData['updated_by'] = Auth::id();
-    
-        $locationLine = LocationLine::create($validatedData);
-    
-       
-        return redirect()->route('location_line.list')->with('success', __('app.record_saved_successfully'));
-    }
+{
+    $validatedData = $request->validate([
+        'name' => 'required|unique:location_lines,name',
+        'warehouse_id' => 'required|exists:warehouses,id',
+    ]);
+
+    $validatedData['created_by'] = Auth::id();
+    $validatedData['updated_by'] = Auth::id();
+
+    LocationLine::create($validatedData);
+
+    return redirect()->route('location_line.list')->with('success', __('app.record_saved_successfully'));
+}
 
     public function update(Request $request)
     {
