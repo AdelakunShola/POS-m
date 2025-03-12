@@ -20,6 +20,18 @@
         <x-label for="name" name="{{ __('app.name') }}" />
         <x-input type="text" name="name" :required="true" value="{{ $locationLine->name }}" />
     </div>
+
+    <div class="col-md-12">
+    <x-label for="warehouse_id" name="Warehouse" />
+    <select name="warehouse_id" class="form-control" required>
+        @foreach($warehouses as $warehouse)
+            <option value="{{ $warehouse->id }}" @selected(old('warehouse_id', $locationLine->warehouse_id ?? '') == $warehouse->id)>
+                {{ $warehouse->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
     <div class="col-md-12">
         <x-button type="submit" class="primary px-4" text="{{ __('app.submit') }}" />
         <x-anchor-tag href="{{ route('dashboard') }}" text="{{ __('app.close') }}" class="btn btn-light px-4" />

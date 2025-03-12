@@ -24,8 +24,10 @@ class LocationLineController extends Controller
     public function edit($id): View
     {
         $locationLine = LocationLine::findOrFail($id);
-        return view('location_line.edit', compact('locationLine'));
+        $warehouses = Warehouse::all();
+        return view('location_line.edit', compact('locationLine', 'warehouses'));
     }
+    
 
     public function store(Request $request)
 {
@@ -47,7 +49,9 @@ class LocationLineController extends Controller
         $validatedData = $request->validate([
             'id' => 'required|exists:location_lines,id',
             'name' => 'required|unique:location_lines,name,' . $request->id,
+            'warehouse_id' => 'required|exists:warehouses,id',
         ]);
+        
 
         LocationLine::where('id', $request->id)->update($validatedData);
 

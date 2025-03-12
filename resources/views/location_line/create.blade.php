@@ -20,7 +20,7 @@
         <x-input type="text" name="name" :required="true" autofocus />
     </div>
     <div class="col-md-12">
-        <x-label for="warehouse_id" name="{{ __('app.warehouse') }}" />
+        <x-label for="warehouse_id" name="Warehouse" />
         <select name="warehouse_id" class="form-control" required>
             <option value="">Select Warehouse</option>
             @foreach($warehouses as $warehouse)
