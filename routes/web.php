@@ -1275,8 +1275,9 @@ Route::group(['prefix' => 'location-line'], function () {
 
     /////CYCLE COUNT
     Route::get('/cycle-count/create', [BarcodeController::class, 'createCyclecount'])->name('cycle_count.create');
+    Route::get('/cycle-count/store', [BarcodeController::class, 'storeCyclecount'])->name('cycle-count.store');
     
-
+    
 
     
 
