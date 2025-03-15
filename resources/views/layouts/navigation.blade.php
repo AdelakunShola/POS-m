@@ -409,7 +409,7 @@
 			</li>
 
 			<li class="">
-				<a href="{{ route('cycle_count.create') }}"><i class='bx bx-radio-circle'></i>Cycle Count</a>
+				<a href="{{ route('cycle-count.all') }}"><i class='bx bx-radio-circle'></i>Cycle Count</a>
 			</li>
 		
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CycleCount;
+use App\Models\CyclecountDetail;
 use App\Models\InventoryCheckin;
 use App\Models\InventoryTransfer;
 use App\Models\Items\Item;
@@ -685,8 +686,39 @@ public function storeCyclecount(Request $request)
             'updated_by' => Auth::id(),
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Cycle Count Order Created Successfully!');
+        return redirect()->route('cycle-count.all')->with('success', 'Cycle Count Order Created Successfully!');
     } 
+
+
+    public function fetchLocations(Request $request)
+{
+    $item_id = $request->item_id;
+    $locations = InventoryCheckin::where('item_id', $item_id)->select('id', 'location_name')->get();
+    
+    return response()->json($locations);
+}
+
+
+
+public function submitScan(Request $request)
+{
+    CyclecountDetail::create([
+        'cycle_count_id' => $request->cycle_count_id,
+        'scanned_barcode' => $request->barcode_scan,
+        'expected_stock' => 0, // You might update this dynamically
+        'counted_qty' => 1, // Since we are scanning one at a time
+        'value_diff' => 0, // Update based on logic
+        'recount' => false,
+        'approved' => false,
+        'counted_by' => auth()->id(),
+        'approved_by' => null,
+        'note' => null,
+    ]);
+
+    return response()->json(['success' => true]);
+}
+
+
 
 
 
