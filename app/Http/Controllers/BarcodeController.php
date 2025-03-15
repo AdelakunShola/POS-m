@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CycleCount;
 use App\Models\InventoryCheckin;
 use App\Models\InventoryTransfer;
 use App\Models\Items\Item;
@@ -11,7 +12,9 @@ use App\Models\LocationLine;
 use App\Models\ProductBarcode;
 use App\Models\Sale\Sale;
 use App\Models\User;
+use App\Models\Warehouse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -652,19 +655,38 @@ public function scanOut(Request $request)
 
 ////////////CYCLE COUNT
 
+
+public function allCyclecount()
+{
+    $cyclecount = CycleCount::latest()->get();
+    return view('cycle-count.all_cycle_count', compact('cyclecount'));
+}
+
 public function createCyclecount()
 {
     $users = User::latest()->get();
     $items = Item::latest()->get();
+    $warehouse = Warehouse::latest()->get();
 
-    return view('cycle-count.create_cycle_count', compact('users', 'items'));
+    return view('cycle-count.create_cycle_count', compact('users', 'items', 'warehouse'));
 }
 
 
-public function storeCyclecount()
+public function storeCyclecount(Request $request)
 {
    
-}
+
+        $cycleCount = CycleCount::create([
+            'item_id' => $request->item_id,
+            'schedule_date' => $request->schedule_date,
+            'warehouse_id' => $request->warehouse_id,
+            'user_id' => $request->user_id,
+            'created_by' => Auth::id(),
+            'updated_by' => Auth::id(),
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Cycle Count Order Created Successfully!');
+    } 
 
 
 
