@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="{{ $appDirection }}">
+<html lang="ar" dir="{{ $appDirection ?? 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <title>{{ __('payment.receipt') }}</title>

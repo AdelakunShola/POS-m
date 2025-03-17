@@ -2,6 +2,7 @@
 
 namespace App\Models\Items;
 
+use App\Models\InventoryCheckin;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -178,5 +179,11 @@ class Item extends Model
 {
     return $this->hasMany(ProductBarcode::class);
 }
+
+public function inventoryCheckins()
+{
+    return $this->hasMany(InventoryCheckin::class, 'item_id');
+}
+
 
 }

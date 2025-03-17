@@ -3,7 +3,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<!--favicon-->
-	<link rel="icon" href='{{ url("/fevicon/" . $fevicon) }}'  type="image/png" />
+	<link rel="icon" href='{{ url("/fevicon/") }}'  type="image/png" />
 	<!--plugins-->
 	<link href="{{ versionedAsset('assets/plugins/vectormap/jquery-jvectormap-2.0.2.css') }}" rel="stylesheet" />
 	<link href="{{ versionedAsset('assets/plugins/simplebar/css/simplebar.css') }}" rel="stylesheet" />
@@ -16,7 +16,7 @@
 	<script src="{{ versionedAsset('assets/js/pace.min.js') }}"></script>
 	<link href="{{ versionedAsset('assets/css/pace.min.css') }}" rel="stylesheet" />
 	<!-- Bootstrap CSS -->
-	@if($appDirection=='ltr')
+	@if($appDirection ?? 'ltr') 
 	<link href="{{ versionedAsset('assets/css/bootstrap.min.css') }}" rel="stylesheet">
 	<link href="{{ versionedAsset('assets/css/bootstrap-extended.css') }}" rel="stylesheet">
 	<link href="{{ versionedAsset('assets/css/app.css') }}" rel="stylesheet">

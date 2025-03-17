@@ -1,5 +1,5 @@
 <!doctype html>
-<html class="{{ $themeMode }}" lang="en" dir="{{ $appDirection }}">
+<html class="{{ $themeMode }}" lang="en" >
 
 @include('layouts.head')
 

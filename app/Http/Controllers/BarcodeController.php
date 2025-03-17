@@ -659,9 +659,15 @@ public function scanOut(Request $request)
 
 public function allCyclecount()
 {
-    $cyclecount = CycleCount::latest()->get();
+    $cyclecount = CycleCount::with([
+        'item',
+        'warehouse',
+        'item.inventoryCheckins.location' // Load locations with inventory check-ins
+    ])->latest()->get();
+
     return view('cycle-count.all_cycle_count', compact('cyclecount'));
 }
+
 
 public function createCyclecount()
 {
@@ -673,8 +679,7 @@ public function createCyclecount()
 }
 
 
-public function storeCyclecount(Request $request)
-{
+public function storeCyclecount(Request $request){
    
 
         $cycleCount = CycleCount::create([
@@ -692,9 +697,16 @@ public function storeCyclecount(Request $request)
 
     public function fetchLocations(Request $request)
 {
-    $item_id = $request->item_id;
-    $locations = InventoryCheckin::where('item_id', $item_id)->select('id', 'location_name')->get();
-    
+    $locations = Location::whereHas('inventoryCheckins', function ($query) use ($request) {
+            $query->where('item_id', $request->item_id);
+        })
+        ->with(['locationLine', 'inventoryCheckins' => function ($query) use ($request) {
+            $query->where('item_id', $request->item_id);
+        }])
+        ->get();
+
+    Log::info('Fetched Locations:', $locations->toArray()); // Debugging log
+
     return response()->json($locations);
 }
 

@@ -26,4 +26,9 @@ public function warehouse()
     return $this->belongsTo(Warehouse::class);
 }
 
+public function inventoryCheckins()
+{
+    return $this->hasMany(InventoryCheckin::class, 'location_line_id');
+}
+
 }

@@ -38,4 +38,10 @@ public function warehouse()
 }
 
 
+public function inventoryCheckins()
+{
+    return $this->hasMany(InventoryCheckin::class);
+}
+
+
 }
